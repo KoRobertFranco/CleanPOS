@@ -1,11 +1,12 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
-import type { CartItem, Order, PaymentMethod, Product } from './types';
+import type { CartItem, Order, PaymentMethod, Product, ReturnedItem, ReturnReason, SaleReturn } from './types';
 import { SEED_PRODUCTS, TAX_RATE } from './seed';
 
 interface StoreValue {
   products: Product[];
   cart: CartItem[];
   orders: Order[];
+  returns: SaleReturn[];
   addToCart: (product: Product) => void;
   decrementFromCart: (productId: string) => void;
   removeFromCart: (productId: string) => void;
@@ -15,6 +16,7 @@ interface StoreValue {
   cartTotal: number;
   cartCount: number;
   checkout: (paymentMethod: PaymentMethod) => Order;
+  processReturn: (orderId: string, items: ReturnedItem[], reason: ReturnReason) => SaleReturn;
   updateProduct: (product: Product) => void;
   addProduct: (product: Product) => void;
   deleteProduct: (id: string) => void;
@@ -23,11 +25,13 @@ interface StoreValue {
 const StoreContext = createContext<StoreValue | null>(null);
 
 let orderCounter = 1000;
+let returnCounter = 0;
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>(SEED_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [returns, setReturns] = useState<SaleReturn[]>([]);
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -102,10 +106,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const processReturn = (orderId: string, items: ReturnedItem[], reason: ReturnReason): SaleReturn => {
+    const subtotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+    const tax = subtotal * TAX_RATE;
+    const refundTotal = subtotal + tax;
+    const saleReturn: SaleReturn = {
+      id: `RET-${++returnCounter}`,
+      orderId,
+      items,
+      total: subtotal,
+      tax,
+      refundTotal,
+      reason,
+      createdAt: Date.now(),
+    };
+    setReturns((prev) => [saleReturn, ...prev]);
+    setProducts((prev) =>
+      prev.map((p) => {
+        const item = items.find((i) => i.product.id === p.id);
+        return item ? { ...p, stock: p.stock + item.quantity } : p;
+      }),
+    );
+    return saleReturn;
+  };
+
   const value: StoreValue = {
     products,
     cart,
     orders,
+    returns,
     addToCart,
     decrementFromCart,
     removeFromCart,
@@ -115,6 +144,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     cartTotal,
     cartCount,
     checkout,
+    processReturn,
     updateProduct,
     addProduct,
     deleteProduct,

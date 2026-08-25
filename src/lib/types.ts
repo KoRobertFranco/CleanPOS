@@ -29,3 +29,31 @@ export interface Order {
   status: OrderStatus;
   createdAt: number;
 }
+
+export interface ReturnedItem {
+  product: Product;
+  quantity: number;
+}
+
+export type ReturnReason = 'defective' | 'wrong_item' | 'customer_change' | 'expired';
+
+export interface SaleReturn {
+  id: string;
+  orderId: string;
+  items: ReturnedItem[];
+  total: number;
+  tax: number;
+  refundTotal: number;
+  reason: ReturnReason;
+  createdAt: number;
+}
+
+export interface ProductSummary {
+  product: Product;
+  qtySold: number;
+  qtyReturned: number;
+  netQty: number;
+  revenue: number;
+  refunds: number;
+  netRevenue: number;
+}

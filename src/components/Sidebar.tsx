@@ -1,9 +1,9 @@
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ShoppingCart, Package, Receipt, BarChart3, LogOut } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, Receipt, ChartBar as BarChart3, LogOut, ClipboardList } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
 
-export type View = 'pos' | 'dashboard' | 'products' | 'orders' | 'sales';
+export type View = 'pos' | 'dashboard' | 'products' | 'orders' | 'sales' | 'productSummary';
 
 interface SidebarProps {
   view: View;
@@ -14,8 +14,9 @@ const NAV: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'pos', label: 'Checkout', icon: ShoppingCart },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'sales', label: 'Sales', icon: BarChart3 },
+  { id: 'productSummary', label: 'Product Report', icon: ClipboardList },
   { id: 'products', label: 'Products', icon: Package },
-  { id: 'orders', label: 'Orders', icon: Receipt },
+  { id: 'orders', label: 'Invoices', icon: Receipt },
 ];
 
 export function Sidebar({ view, onNavigate }: SidebarProps) {

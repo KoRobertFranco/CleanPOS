@@ -7,6 +7,7 @@ import { DashboardView } from '@/components/DashboardView';
 import { ProductsView } from '@/components/ProductsView';
 import { OrdersView } from '@/components/OrdersView';
 import { SalesView } from '@/components/SalesView';
+import { ProductSummaryView } from '@/components/ProductSummaryView';
 import { LoginView } from '@/components/LoginView';
 
 function AppContent() {
@@ -25,6 +26,7 @@ function AppContent() {
           {view === 'products' && <ProductsView />}
           {view === 'orders' && <OrdersView />}
           {view === 'sales' && <SalesView />}
+          {view === 'productSummary' && <ProductSummaryView />}
         </main>
       </div>
     </StoreProvider>
