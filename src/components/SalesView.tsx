@@ -3,6 +3,7 @@ import { TrendingUp, DollarSign, CreditCard, Banknote, Calendar, Download } from
 import { useStore } from '@/lib/store';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { Card, Button } from '@/components/ui';
+import { DataGrid, type Column } from '@/components/DataGrid';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/lib/types';
 
@@ -73,6 +74,59 @@ export function SalesView() {
 
   const maxCatRevenue = categoryBreakdown[0]?.[1].revenue ?? 1;
   const maxDailyRevenue = Math.max(...dailyBreakdown.map((d) => d[1].revenue), 1);
+
+  type DailyRow = { date: string; orders: number; items: number; revenue: number; sharePct: number; shareWidth: number };
+
+  const dailyRows: DailyRow[] = dailyBreakdown.map(([date, data]) => ({
+    date,
+    orders: data.orders,
+    items: data.items,
+    revenue: data.revenue,
+    sharePct: totalRevenue > 0 ? Math.round((data.revenue / totalRevenue) * 100) : 0,
+    shareWidth: (data.revenue / maxDailyRevenue) * 100,
+  }));
+
+  const dailyColumns: Column<DailyRow>[] = [
+    {
+      key: 'date',
+      header: 'Date',
+      render: (r) => <span className="font-medium text-stone-900">{r.date}</span>,
+    },
+    {
+      key: 'orders',
+      header: 'Orders',
+      align: 'right',
+      render: (r) => <span className="text-stone-600">{r.orders}</span>,
+    },
+    {
+      key: 'items',
+      header: 'Items',
+      align: 'right',
+      render: (r) => <span className="text-stone-600">{r.items}</span>,
+    },
+    {
+      key: 'revenue',
+      header: 'Revenue',
+      align: 'right',
+      render: (r) => <span className="font-bold text-stone-900">{formatCurrency(r.revenue)}</span>,
+    },
+    {
+      key: 'share',
+      header: 'Share',
+      align: 'right',
+      render: (r) => (
+        <div className="flex items-center justify-end gap-2">
+          <div className="h-1.5 w-24 overflow-hidden rounded-full bg-stone-100">
+            <div
+              className="h-full rounded-full bg-stone-700"
+              style={{ width: `${r.shareWidth}%` }}
+            />
+          </div>
+          <span className="w-10 text-right text-xs text-stone-400">{r.sharePct}%</span>
+        </div>
+      ),
+    },
+  ];
 
   const stats = [
     { label: 'Total Sales', value: formatCurrency(totalRevenue), icon: DollarSign, accent: 'bg-emerald-50 text-emerald-600' },
@@ -219,51 +273,23 @@ export function SalesView() {
         </Card>
       </div>
 
-      <Card className="mt-6 overflow-hidden">
-        <div className="border-b border-stone-100 p-5">
+      <div className="mt-6">
+        <div className="mb-3 flex items-center gap-2">
           <h2 className="text-base font-bold text-stone-900">Daily Sales Breakdown</h2>
         </div>
-        {dailyBreakdown.length === 0 ? (
-          <div className="flex h-40 items-center justify-center text-sm text-stone-400">
+        {dailyRows.length === 0 ? (
+          <Card className="flex h-40 items-center justify-center text-sm text-stone-400">
             No sales data for this period
-          </div>
+          </Card>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-stone-100 bg-stone-50/50 text-left text-xs font-semibold uppercase tracking-wide text-stone-400">
-                <th className="px-5 py-3">Date</th>
-                <th className="px-5 py-3 text-right">Orders</th>
-                <th className="px-5 py-3 text-right">Items</th>
-                <th className="px-5 py-3 text-right">Revenue</th>
-                <th className="px-5 py-3 text-right">Share</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dailyBreakdown.map(([date, data]) => (
-                <tr key={date} className="border-b border-stone-50 transition hover:bg-stone-50/50">
-                  <td className="px-5 py-3 text-sm font-medium text-stone-900">{date}</td>
-                  <td className="px-5 py-3 text-right text-sm text-stone-600">{data.orders}</td>
-                  <td className="px-5 py-3 text-right text-sm text-stone-600">{data.items}</td>
-                  <td className="px-5 py-3 text-right text-sm font-bold text-stone-900">{formatCurrency(data.revenue)}</td>
-                  <td className="px-5 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="h-1.5 w-24 overflow-hidden rounded-full bg-stone-100">
-                        <div
-                          className="h-full rounded-full bg-stone-700"
-                          style={{ width: `${(data.revenue / maxDailyRevenue) * 100}%` }}
-                        />
-                      </div>
-                      <span className="w-10 text-right text-xs text-stone-400">
-                        {totalRevenue > 0 ? Math.round((data.revenue / totalRevenue) * 100) : 0}%
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataGrid
+            columns={dailyColumns}
+            rows={dailyRows}
+            rowKey={(r) => r.date}
+            emptyMessage="No sales data for this period"
+          />
         )}
-      </Card>
+      </div>
     </div>
   );
 }

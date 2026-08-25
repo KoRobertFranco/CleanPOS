@@ -4,6 +4,8 @@ import { useStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/format';
 import type { Category, Product } from '@/lib/types';
 import { Button, Card } from '@/components/ui';
+import { DataGrid, type Column } from '@/components/DataGrid';
+import { FilterBar } from '@/components/FilterBar';
 import { cn } from '@/lib/utils';
 
 const CATEGORIES: Category[] = ['Snacks', 'Beverages', 'Grocery', 'Household'];
@@ -30,6 +32,75 @@ export function ProductsView() {
     setShowForm(true);
   };
 
+  const columns: Column<Product>[] = [
+    {
+      key: 'product',
+      header: 'Product',
+      render: (p) => (
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{p.emoji}</span>
+          <span className="font-medium text-stone-900">{p.name}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      render: (p) => (
+        <span className="rounded-lg bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600">
+          {p.category}
+        </span>
+      ),
+    },
+    {
+      key: 'sku',
+      header: 'SKU',
+      render: (p) => <span className="text-stone-500">{p.sku}</span>,
+    },
+    {
+      key: 'price',
+      header: 'Price',
+      align: 'right',
+      render: (p) => <span className="font-semibold text-stone-900">{formatCurrency(p.price)}</span>,
+    },
+    {
+      key: 'stock',
+      header: 'Stock',
+      align: 'right',
+      render: (p) => (
+        <span
+          className={cn(
+            'text-sm font-medium',
+            p.stock === 0 ? 'text-red-500' : p.stock < 15 ? 'text-amber-600' : 'text-stone-600',
+          )}
+        >
+          {p.stock}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'right',
+      render: (p) => (
+        <div className="flex justify-end gap-1">
+          <button
+            onClick={(e) => { e.stopPropagation(); openEdit(p); }}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-stone-900"
+          >
+            <Pencil size={15} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); deleteProduct(p.id); }}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition hover:bg-red-50 hover:text-red-500"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="h-full overflow-y-auto bg-stone-50 p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -42,78 +113,18 @@ export function ProductsView() {
         </Button>
       </div>
 
-      <div className="mb-5 relative max-w-sm">
-        <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search products..."
-          className="w-full rounded-xl border border-stone-200 bg-white py-2.5 pl-10 pr-4 text-sm text-stone-900 outline-none transition focus:border-stone-400"
-        />
-      </div>
+      <FilterBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search products..."
+      />
 
-      <Card className="overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-stone-100 bg-stone-50/50 text-left text-xs font-semibold uppercase tracking-wide text-stone-400">
-              <th className="px-5 py-3">Product</th>
-              <th className="px-5 py-3">Category</th>
-              <th className="px-5 py-3">SKU</th>
-              <th className="px-5 py-3 text-right">Price</th>
-              <th className="px-5 py-3 text-right">Stock</th>
-              <th className="px-5 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr key={p.id} className="border-b border-stone-50 transition hover:bg-stone-50/50">
-                <td className="px-5 py-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{p.emoji}</span>
-                    <span className="font-medium text-stone-900">{p.name}</span>
-                  </div>
-                </td>
-                <td className="px-5 py-3">
-                  <span className="rounded-lg bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600">
-                    {p.category}
-                  </span>
-                </td>
-                <td className="px-5 py-3 text-sm text-stone-500">{p.sku}</td>
-                <td className="px-5 py-3 text-right font-semibold text-stone-900">{formatCurrency(p.price)}</td>
-                <td className="px-5 py-3 text-right">
-                  <span
-                    className={cn(
-                      'text-sm font-medium',
-                      p.stock === 0 ? 'text-red-500' : p.stock < 15 ? 'text-amber-600' : 'text-stone-600',
-                    )}
-                  >
-                    {p.stock}
-                  </span>
-                </td>
-                <td className="px-5 py-3">
-                  <div className="flex justify-end gap-1">
-                    <button
-                      onClick={() => openEdit(p)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-stone-900"
-                    >
-                      <Pencil size={15} />
-                    </button>
-                    <button
-                      onClick={() => deleteProduct(p.id)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition hover:bg-red-50 hover:text-red-500"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {filtered.length === 0 && (
-          <div className="flex h-32 items-center justify-center text-sm text-stone-400">No products found</div>
-        )}
-      </Card>
+      <DataGrid
+        columns={columns}
+        rows={filtered}
+        rowKey={(p) => p.id}
+        emptyMessage="No products found"
+      />
 
       {showForm && (
         <ProductForm
