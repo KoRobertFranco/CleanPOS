@@ -156,6 +156,35 @@ export function LoginView() {
             </Button>
           </form>
 
+          {mode === 'signin' && (
+            <div className="mt-6 border-t border-stone-100 pt-5">
+              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-stone-400">
+                Demo Accounts
+              </p>
+              <div className="space-y-2">
+                {[
+                  { email: 'admin@minimart.mm', label: 'Administrator', name: 'Sarah Lee', color: 'bg-blue-100 text-blue-700' },
+                  { email: 'manager@minimart.mm', label: 'Manager', name: 'Jordan Park', color: 'bg-emerald-100 text-emerald-700' },
+                  { email: 'cashier@minimart.mm', label: 'Cashier', name: 'Alex Morgan', color: 'bg-stone-100 text-stone-600' },
+                ].map((demo) => (
+                  <button
+                    key={demo.email}
+                    onClick={() => { setEmail(demo.email); setPassword('minimart123'); setError(''); }}
+                    className="flex w-full items-center justify-between rounded-xl border border-stone-200 bg-stone-50/50 px-4 py-2.5 text-left transition hover:border-stone-300 hover:bg-stone-50"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className={cn('rounded-lg px-2 py-0.5 text-xs font-medium', demo.color)}>
+                        {demo.label}
+                      </span>
+                      <p className="text-sm font-medium text-stone-900">{demo.name}</p>
+                    </div>
+                    <span className="text-xs text-stone-400">minimart123</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {mode === 'signup' && (
             <p className="mt-5 text-center text-xs text-stone-400">
               New accounts start as Cashier. An administrator can promote you to Manager or Admin later.
