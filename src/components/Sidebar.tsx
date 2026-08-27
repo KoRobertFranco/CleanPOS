@@ -1,27 +1,37 @@
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, ShoppingCart, Package, Receipt, ChartBar as BarChart3, LogOut, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, Receipt, ChartBar as BarChart3, LogOut, ClipboardList, Users as UsersIcon } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
 
-export type View = 'pos' | 'dashboard' | 'products' | 'orders' | 'sales' | 'productSummary';
+export type View = 'pos' | 'dashboard' | 'products' | 'orders' | 'sales' | 'productSummary' | 'users';
+
+interface NavItem {
+  id: View;
+  label: string;
+  icon: typeof LayoutDashboard;
+  permission: string;
+}
+
+const NAV: NavItem[] = [
+  { id: 'pos', label: 'Checkout', icon: ShoppingCart, permission: 'pos_checkout' },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: 'view_dashboard' },
+  { id: 'sales', label: 'Sales', icon: BarChart3, permission: 'view_sales' },
+  { id: 'productSummary', label: 'Product Report', icon: ClipboardList, permission: 'view_product_report' },
+  { id: 'products', label: 'Products', icon: Package, permission: 'manage_products' },
+  { id: 'orders', label: 'Invoices', icon: Receipt, permission: 'view_invoices' },
+  { id: 'users', label: 'Users', icon: UsersIcon, permission: 'manage_users' },
+];
 
 interface SidebarProps {
   view: View;
   onNavigate: (view: View) => void;
 }
 
-const NAV: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: 'pos', label: 'Checkout', icon: ShoppingCart },
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'sales', label: 'Sales', icon: BarChart3 },
-  { id: 'productSummary', label: 'Product Report', icon: ClipboardList },
-  { id: 'products', label: 'Products', icon: Package },
-  { id: 'orders', label: 'Invoices', icon: Receipt },
-];
-
 export function Sidebar({ view, onNavigate }: SidebarProps) {
   const { cartCount } = useStore();
-  const { user, logout } = useAuth();
+  const { user, signOut, hasPermission } = useAuth();
+
+  const visibleNav = NAV.filter((item) => hasPermission(item.permission));
 
   return (
     <aside className="flex h-full w-20 flex-col items-center border-r border-stone-200 bg-white py-5 lg:w-60">
@@ -35,7 +45,7 @@ export function Sidebar({ view, onNavigate }: SidebarProps) {
       </div>
 
       <nav className="flex w-full flex-1 flex-col gap-1 px-3">
-        {NAV.map((item) => {
+        {visibleNav.map((item) => {
           const active = view === item.id;
           const Icon = item.icon;
           return (
@@ -64,14 +74,14 @@ export function Sidebar({ view, onNavigate }: SidebarProps) {
       <div className="w-full px-3">
         <div className="flex items-center gap-2.5 rounded-xl bg-stone-50 px-3 py-2.5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500 text-sm font-bold text-white">
-            {user?.initials ?? 'A'}
+            {user?.initials ?? '?'}
           </div>
           <div className="hidden flex-1 lg:block">
-            <p className="text-xs font-semibold text-stone-900">{user?.name ?? 'Alex Morgan'}</p>
-            <p className="text-[11px] text-stone-500">{user?.role ?? 'Cashier'}</p>
+            <p className="text-xs font-semibold text-stone-900">{user?.fullName ?? 'Unknown'}</p>
+            <p className="text-[11px] capitalize text-stone-500">{user?.role ?? ''}</p>
           </div>
           <button
-            onClick={logout}
+            onClick={signOut}
             className="text-stone-400 transition hover:text-red-500 lg:ml-auto"
             title="Sign out"
           >
